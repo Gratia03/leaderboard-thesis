@@ -29,6 +29,9 @@ function updateRanks(data) {
 export default async function handler(req, res) {
     if (req.method === 'GET') {
         const data = await redis.get(DATA_KEY);
+        // Cache data di browser selama 10 detik, dan di CDN selama 60 detik
+        // stale-while-revalidate memungkinkan data lama ditampilkan sambil fetch data baru di background
+        res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30');
         return res.status(200).json(data || []);
     }
 
