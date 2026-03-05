@@ -602,9 +602,6 @@
                         <button onclick="event.stopPropagation(); startEdit(${idx})" class="p-2.5 text-slate-400 hover:text-white bg-dark-900 hover:bg-indigo-600 border border-white/5 hover:border-transparent rounded-xl transition-all shadow-sm" title="Update Data">
                             <i data-lucide="edit-3" class="w-4 h-4"></i>
                         </button>
-                        <button onclick="event.stopPropagation(); hapusData(${idx})" class="p-2.5 text-slate-400 hover:text-white bg-dark-900 hover:bg-red-600 border border-white/5 hover:border-transparent rounded-xl transition-all shadow-sm" title="Eliminate">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
                     </div>
                 </td>
             `;
@@ -758,16 +755,6 @@
             alert('Upload sequence failed.');
         } finally {
             document.getElementById('btn-save').disabled = false;
-        }
-    }
-
-    async function hapusData(idx) {
-        if (!confirm('Eliminate this record permanently?')) return;
-        try {
-            await fetch(`/api?index=${idx}`, { method: 'DELETE' });
-            await loadData();
-        } catch (e) {
-            alert('Elimination failed.');
         }
     }
 
