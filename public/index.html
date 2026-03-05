@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thesis Leaderboard</title>
+    <!-- Mute Tailwind CDN Warning -->
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, args);
+        };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -16,67 +24,210 @@
                     },
                     colors: {
                         dark: {
-                            900: '#0B0F19',
-                            800: '#111827',
-                            700: '#1F2937',
+                            900: '#050810',
+                            800: '#0a0f1c',
+                            700: '#111827',
                         },
                         gold: '#FBBF24',
                         silver: '#94A3B8',
                         bronze: '#D97706',
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pan-grid': 'panGrid 20s linear infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        panGrid: {
+                            '0%': { transform: 'translateY(0)' },
+                            '100%': { transform: 'translateY(50px)' },
+                        }
                     }
                 },
             },
         }
     </script>
     <style>
-        body { background: #0B0F19; background-image: radial-gradient(circle at 50% -20%, #1e1b4b, #0B0F19 60%); }
-        .glass-panel { background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .podium-1 { background: linear-gradient(180deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0) 100%); border-top: 2px solid #FBBF24; }
-        .podium-2 { background: linear-gradient(180deg, rgba(148, 163, 184, 0.15) 0%, rgba(148, 163, 184, 0) 100%); border-top: 2px solid #94A3B8; }
-        .podium-3 { background: linear-gradient(180deg, rgba(217, 119, 6, 0.15) 0%, rgba(217, 119, 6, 0) 100%); border-top: 2px solid #D97706; }
-        .avatar-glow-1 { box-shadow: 0 0 30px rgba(251, 191, 36, 0.3); }
-        .avatar-glow-2 { box-shadow: 0 0 30px rgba(148, 163, 184, 0.3); }
-        .avatar-glow-3 { box-shadow: 0 0 30px rgba(217, 119, 6, 0.3); }
+        body { 
+            background: #050810; 
+            overflow-x: hidden; 
+        }
+
+        /* Dynamic Grid Background */
+        .bg-grid-animated {
+            background-size: 50px 50px;
+            background-image: 
+                linear-gradient(to right, rgba(99, 102, 241, 0.07) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
+            mask-image: radial-gradient(ellipse 100% 100% at 50% 0%, black 10%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse 100% 100% at 50% 0%, black 10%, transparent 80%);
+        }
         
+        /* Advanced Glassmorphism */
+        .glass-panel { 
+            background: rgba(10, 15, 28, 0.5); 
+            backdrop-filter: blur(24px); 
+            -webkit-backdrop-filter: blur(24px); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+        .glass-panel-hover { transition: all 0.3s ease; }
+        .glass-panel-hover:hover { 
+            background: rgba(17, 24, 39, 0.8); 
+            border-color: rgba(99, 102, 241, 0.3); 
+            box-shadow: 0 10px 40px -10px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Podium Effects */
+        .podium-1 { background: linear-gradient(180deg, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0) 100%); border-top: 2px solid #FBBF24; box-shadow: inset 0 20px 40px -20px rgba(251, 191, 36, 0.4); }
+        .podium-2 { background: linear-gradient(180deg, rgba(148, 163, 184, 0.2) 0%, rgba(148, 163, 184, 0) 100%); border-top: 2px solid #94A3B8; box-shadow: inset 0 20px 40px -20px rgba(148, 163, 184, 0.3); }
+        .podium-3 { background: linear-gradient(180deg, rgba(217, 119, 6, 0.2) 0%, rgba(217, 119, 6, 0) 100%); border-top: 2px solid #D97706; box-shadow: inset 0 20px 40px -20px rgba(217, 119, 6, 0.3); }
+        
+        .avatar-glow-1 { box-shadow: 0 0 30px rgba(251, 191, 36, 0.5), inset 0 0 20px rgba(251, 191, 36, 0.5); }
+        .avatar-glow-2 { box-shadow: 0 0 30px rgba(148, 163, 184, 0.4); }
+        .avatar-glow-3 { box-shadow: 0 0 30px rgba(217, 119, 6, 0.4); }
+        
+        /* Animation Utilities */
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+        
+        .animated-text {
+            background: linear-gradient(to right, #818cf8, #c084fc, #818cf8);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            animation: shine 3s linear infinite;
+        }
+        @keyframes shine { to { background-position: 200% center; } }
+
+        /* Smooth Navbar */
+        #main-nav {
+            max-width: 260px;
+            width: 100%;
+            transition: max-width 1.5s cubic-bezier(0.22, 1, 0.36, 1), background-color 1.5s ease, border-radius 1.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 1.5s ease, border-color 1.5s ease;
+            border-radius: 9999px; /* Pill shape initially */
+        }
+        #main-nav.nav-scrolled {
+            max-width: 1280px; /* 7xl */
+            background-color: rgba(10, 15, 28, 0.85);
+            border-radius: 24px; /* Rounded card shape */
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.8);
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+        
+        /* Logo Shift Transition */
+        #logo-block {
+            transition: left 1.5s cubic-bezier(0.22, 1, 0.36, 1), transform 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .nav-scrolled #logo-block {
+            left: 24px; /* md:px-6 is 24px */
+            transform: translate(0, -50%);
+        }
+        @media (max-width: 768px) {
+            .nav-scrolled #logo-block {
+                left: 50%;
+                transform: translate(-50%, -50%); /* Tetap di tengah untuk mobile */
+            }
+        }
+        
+        /* Expanded Content Transition */
+        .nav-scrolled #nav-expanded-content {
+            opacity: 1;
+            transform: translate(0, -50%);
+            pointer-events: auto;
+        }
+
         /* Modal Transitions */
         .modal { opacity: 0; pointer-events: none; transition: all 0.3s ease; }
         .modal.active { opacity: 1; pointer-events: auto; }
         .modal-content { transform: translateY(20px) scale(0.95); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .modal.active .modal-content { transform: translateY(0) scale(1); }
 
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
 </head>
-<body class="text-slate-300 min-h-screen">
+<body class="text-slate-300 min-h-screen relative z-0">
 
-<!-- Top Navigation -->
-<nav class="border-b border-white/5 bg-dark-900/50 backdrop-blur-md sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
-        <div class="flex items-center gap-2 md:gap-3">
-            <div class="w-8 h-8 md:w-10 md:h-10 bg-indigo-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-                <i data-lucide="graduation-cap" class="text-white w-4 h-4 md:w-5 md:h-5"></i>
-            </div>
-            <div class="overflow-hidden">
-                <h1 class="font-bold text-white tracking-tight leading-none text-base md:text-lg truncate">Thesis Tracker</h1>
-                <p class="text-[8px] md:text-[10px] font-semibold text-indigo-400 uppercase tracking-widest mt-1">Class of 2022</p>
-            </div>
-        </div>
-        <div class="flex items-center shrink-0 ml-2">
-            <button onclick="openFormModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs md:text-sm font-semibold px-3 md:px-5 py-2 md:py-2.5 rounded-lg transition-all flex items-center gap-1.5 md:gap-2 shadow-lg shadow-indigo-600/20">
-                <i data-lucide="plus" class="w-3 h-3 md:w-4 md:h-4"></i> <span class="hidden sm:inline">Add / Update</span><span class="sm:hidden">Update</span>
-            </button>
-        </div>
+<!-- Epic Interactive Background -->
+<div class="fixed inset-0 w-full h-[150%] pointer-events-none z-[-2] bg-grid-animated -top-20 animate-pan-grid"></div>
+<div id="ambient-bg" class="fixed inset-0 w-full h-full pointer-events-none overflow-hidden z-[-1] transition-transform duration-1000 ease-out">
+    <div class="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full bg-indigo-600/15 blur-[150px] animate-blob mix-blend-screen"></div>
+    <div class="absolute top-[30%] -right-[20%] w-[50%] h-[50%] rounded-full bg-purple-600/15 blur-[150px] animate-blob animation-delay-2000 mix-blend-screen"></div>
+    <div class="absolute -bottom-[20%] left-[20%] w-[70%] h-[70%] rounded-full bg-blue-600/15 blur-[150px] animate-blob animation-delay-4000 mix-blend-screen"></div>
+    
+    <!-- Floating Educational Icons (More Visible & Interactive) -->
+    <div class="absolute top-[15%] left-[10%] animate-float" style="animation-duration: 8s;">
+        <i data-lucide="graduation-cap" class="w-24 h-24 text-indigo-500/10 drop-shadow-[0_0_15px_rgba(99,102,241,0.2)]"></i>
     </div>
-</nav>
+    <div class="absolute top-[40%] right-[10%] animate-float" style="animation-duration: 10s; animation-delay: 1s;">
+        <i data-lucide="book-open" class="w-32 h-32 text-purple-500/10 drop-shadow-[0_0_15px_rgba(168,85,247,0.2)]"></i>
+    </div>
+    <div class="absolute bottom-[20%] left-[15%] animate-float" style="animation-duration: 7s; animation-delay: 2s;">
+        <i data-lucide="award" class="w-20 h-20 text-gold/10 drop-shadow-[0_0_15px_rgba(251,191,36,0.2)]"></i>
+    </div>
+    <div class="absolute bottom-[10%] right-[25%] animate-float" style="animation-duration: 9s; animation-delay: 3s;">
+        <i data-lucide="library" class="w-28 h-28 text-blue-500/10 drop-shadow-[0_0_15px_rgba(59,130,246,0.2)]"></i>
+    </div>
+</div>
 
-<div class="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
+<!-- Floating Top Navigation -->
+<div class="fixed top-0 left-0 right-0 z-50 px-4 md:px-6 pt-4 md:pt-6 pointer-events-none flex justify-center">
+    <nav id="main-nav" class="bg-dark-800/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/50 pointer-events-auto relative overflow-hidden flex flex-col md:flex-row items-center justify-between">
+        <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
+        
+        <div class="w-full px-6 md:px-8 h-16 md:h-20 flex items-center justify-center md:justify-between gap-4">
+            <div class="flex items-center gap-3 md:gap-4 mx-auto md:mx-0">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full p-px shadow-lg shadow-indigo-500/20 shrink-0 group transition-all duration-500">
+                    <div class="w-full h-full bg-dark-900 rounded-full flex items-center justify-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 group-hover:opacity-100 opacity-0 transition-opacity duration-500"></div>
+                        <i data-lucide="hexagon" class="text-indigo-400 w-5 h-5 relative z-10 group-hover:rotate-180 transition-transform duration-700"></i>
+                    </div>
+                </div>
+                <div class="flex flex-col justify-center text-center md:text-left">
+                    <h1 class="font-extrabold tracking-tight leading-none text-lg md:text-xl text-white">
+                        Thesis<span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Race</span>
+                    </h1>
+                    <div class="flex items-center justify-center md:justify-start gap-1.5 mt-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Class of 2022</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hidden by default, appears when navbar expands (on scroll) -->
+            <div id="nav-actions" class="hidden md:flex items-center shrink-0 opacity-0 transition-opacity duration-300">
+                <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-3 h-3 text-emerald-400"></i> Global Leaderboard Active
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+
+
+<div class="max-w-7xl mx-auto px-4 md:px-6 pt-32 md:pt-44 pb-12">
+
     <!-- Podium Section (Top 3) -->
-    <div class="mb-12 md:mb-20">
-        <div class="text-center mb-8 md:mb-12">
-            <h2 class="text-2xl md:text-3xl font-bold text-white">Top Performers</h2>
-            <p class="text-sm md:text-base text-slate-500 mt-1 md:mt-2">Progress tertinggi saat ini.</p>
+    <div class="mb-12 md:mb-20 opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div class="text-center mb-8 md:mb-14">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Top Performers</h2>
+            <div class="h-1 w-12 bg-gradient-to-r from-indigo-500 to-purple-500 mx-auto mt-4 rounded-full"></div>
         </div>
         
         <div id="podium-container" class="flex flex-row items-end justify-center gap-2 sm:gap-6 md:gap-8 lg:gap-12 min-h-[250px] md:min-h-[350px]">
@@ -84,38 +235,39 @@
         </div>
     </div>
 
-
     <!-- Leaderboard List -->
-    <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl">
-        <div class="p-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl opacity-0 animate-fade-in-up border border-white/5" style="animation-delay: 0.3s;">
+        <div class="p-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/[0.02]">
             <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                <i data-lucide="users" class="w-5 h-5 text-indigo-400"></i> All Participants
+                <i data-lucide="activity" class="w-5 h-5 text-indigo-400"></i> Standings
             </h3>
-            <div class="relative w-full sm:w-72">
-                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4"></i>
-                <input type="text" id="searchInput" placeholder="Cari mahasiswa..." onkeyup="filterData()"
-                    class="w-full bg-dark-800 border border-white/10 pl-10 pr-4 py-2 rounded-lg text-sm outline-none focus:border-indigo-500 transition-all text-white placeholder:text-slate-600">
+            <div class="relative w-full sm:w-72 group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors"></i>
+                </div>
+                <input type="text" id="searchInput" placeholder="Cari warrior..." onkeyup="filterData()"
+                    class="w-full bg-dark-900/50 border border-white/10 pl-10 pr-4 py-2 rounded-xl text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all text-white placeholder:text-slate-600">
             </div>
         </div>
         
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-dark-800/50 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                        <th class="px-6 py-4 w-16 text-center">Rank</th>
-                        <th class="px-6 py-4">Mahasiswa</th>
-                        <th class="px-6 py-4">Judul Skripsi</th>
-                        <th class="px-6 py-4 text-center">Total Point</th>
-                        <th class="px-6 py-4 text-center w-24">Aksi</th>
+                    <tr class="bg-dark-900/30 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-white/5">
+                        <th class="px-6 py-5 w-20 text-center">Rank</th>
+                        <th class="px-6 py-5">Mahasiswa</th>
+                        <th class="px-6 py-5">Objektif (Judul)</th>
+                        <th class="px-6 py-5 text-center">Poin</th>
+                        <th class="px-6 py-5 text-center w-24">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="leaderboard-list" class="divide-y divide-white/5">
+                <tbody id="leaderboard-list" class="divide-y divide-white/[0.02]">
                     <!-- List injected here -->
                 </tbody>
             </table>
         </div>
-        <div id="loading-status" class="py-12 text-center text-indigo-400">
-            <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto"></i>
+        <div id="loading-status" class="py-20 text-center text-indigo-400">
+            <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto opacity-50"></i>
         </div>
     </div>
 </div>
@@ -124,116 +276,135 @@
 <div id="formModal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-900/80 backdrop-blur-sm">
     <div class="modal-content glass-panel w-full max-w-2xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden flex flex-col max-h-[90vh]">
         <div class="p-6 border-b border-white/10 flex justify-between items-center bg-dark-800/50 sticky top-0 z-10">
-            <h3 class="text-xl font-bold text-white" id="modalTitle">Update Progress</h3>
-            <button onclick="closeFormModal()" class="text-slate-400 hover:text-white transition-colors">
-                <i data-lucide="x" class="w-6 h-6"></i>
+            <h3 class="text-xl font-bold text-white flex items-center gap-2" id="modalTitle">
+                <i data-lucide="terminal" class="w-5 h-5 text-indigo-400"></i> Update Progress
+            </h3>
+            <button onclick="closeFormModal()" class="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-1 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
-        <div class="p-6 overflow-y-auto space-y-6">
+        <div class="p-6 overflow-y-auto space-y-6 bg-gradient-to-b from-dark-900/50 to-transparent">
             <div class="flex flex-col md:flex-row gap-8">
                 <!-- Avatar Upload -->
                 <div class="w-full md:w-1/3 flex flex-col items-center gap-4">
                     <div class="relative group cursor-pointer" onclick="document.getElementById('avatarUpload').click()">
-                        <div id="avatarPreview" class="w-32 h-32 rounded-full bg-dark-800 border-2 border-dashed border-slate-600 flex flex-col items-center justify-center text-slate-500 overflow-hidden group-hover:border-indigo-500 transition-colors">
-                            <i data-lucide="camera" class="w-8 h-8 mb-1"></i>
-                            <span class="text-[10px] font-bold uppercase tracking-wider">Upload</span>
+                        <div id="avatarPreview" class="w-32 h-32 rounded-full bg-dark-800 border-2 border-dashed border-slate-600 flex flex-col items-center justify-center text-slate-500 overflow-hidden group-hover:border-indigo-500 transition-colors shadow-lg">
+                            <i data-lucide="camera" class="w-8 h-8 mb-1 opacity-50 group-hover:opacity-100 group-hover:text-indigo-400 transition-all"></i>
+                            <span class="text-[10px] font-bold uppercase tracking-wider group-hover:text-indigo-400 transition-all">Upload</span>
                         </div>
-                        <div class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <i data-lucide="upload" class="text-white w-6 h-6"></i>
+                        <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                            <i data-lucide="upload" class="text-white w-6 h-6 animate-bounce"></i>
                         </div>
                     </div>
                     <input type="file" id="avatarUpload" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
-                    <p class="text-[10px] text-slate-500 text-center">Max 1MB. Format: JPG/PNG/WEBP.</p>
+                    <p class="text-[10px] text-slate-500 text-center font-medium">Maksimal 1MB.<br>Rekomendasi wajah asli.</p>
                     <input type="hidden" id="avatarBase64">
                 </div>
 
                 <!-- Form Fields -->
                 <div class="w-full md:w-2/3 space-y-4">
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold text-slate-400">Nama Lengkap</label>
-                        <input type="text" id="form-nama" class="w-full bg-dark-800 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-indigo-500 outline-none transition-all">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Identitas</label>
+                        <input type="text" id="form-nama" placeholder="Nama panggilan..." class="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 outline-none transition-all">
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold text-slate-400">Judul Skripsi (Opsional)</label>
-                        <textarea id="form-judul" rows="2" class="w-full bg-dark-800 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-indigo-500 outline-none transition-all resize-none"></textarea>
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Judul Misi (Skripsi)</label>
+                        <textarea id="form-judul" rows="3" placeholder="Deskripsikan misi skripsimu..." class="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 outline-none transition-all resize-none"></textarea>
                     </div>
                 </div>
             </div>
 
             <hr class="border-white/5">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-3 bg-dark-800/30 p-4 rounded-xl border border-white/5">
-                    <h4 class="text-sm font-bold text-indigo-400">Dosen Pembimbing 1</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-3 bg-dark-800/40 p-5 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-colors group">
+                    <h4 class="text-xs font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span> Target Alpha
+                    </h4>
                     <div>
-                        <label class="text-[10px] font-semibold text-slate-500 uppercase">Nama Dosen</label>
-                        <input type="text" id="form-pembimbing1" class="w-full bg-dark-800 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none mt-1">
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase">Dosen 1</label>
+                        <input type="text" id="form-pembimbing1" placeholder="Nama pembimbing" class="w-full bg-dark-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-indigo-500 outline-none mt-1 transition-all">
                     </div>
                     <div>
-                        <label class="text-[10px] font-semibold text-slate-500 uppercase">Jumlah Bimbingan</label>
-                        <input type="number" id="form-score1" min="0" class="w-full bg-dark-800 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none mt-1 font-bold">
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase">Skor Bimbingan</label>
+                        <input type="number" id="form-score1" min="0" placeholder="0" class="w-full bg-dark-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-indigo-500 outline-none mt-1 font-bold text-indigo-300 transition-all">
                     </div>
                 </div>
-                <div class="space-y-3 bg-dark-800/30 p-4 rounded-xl border border-white/5">
-                    <h4 class="text-sm font-bold text-indigo-400">Dosen Pembimbing 2</h4>
+                <div class="space-y-3 bg-dark-800/40 p-5 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-colors group">
+                    <h4 class="text-xs font-black text-purple-400 uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span> Target Beta
+                    </h4>
                     <div>
-                        <label class="text-[10px] font-semibold text-slate-500 uppercase">Nama Dosen</label>
-                        <input type="text" id="form-pembimbing2" class="w-full bg-dark-800 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none mt-1">
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase">Dosen 2</label>
+                        <input type="text" id="form-pembimbing2" placeholder="Nama pembimbing" class="w-full bg-dark-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-purple-500 outline-none mt-1 transition-all">
                     </div>
                     <div>
-                        <label class="text-[10px] font-semibold text-slate-500 uppercase">Jumlah Bimbingan</label>
-                        <input type="number" id="form-score2" min="0" class="w-full bg-dark-800 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none mt-1 font-bold">
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase">Skor Bimbingan</label>
+                        <input type="number" id="form-score2" min="0" placeholder="0" class="w-full bg-dark-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-purple-500 outline-none mt-1 font-bold text-purple-300 transition-all">
                     </div>
                 </div>
             </div>
         </div>
-        <div class="p-6 border-t border-white/10 bg-dark-800/50 flex justify-end gap-3 sticky bottom-0">
-            <button onclick="closeFormModal()" class="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-300 hover:bg-white/5 transition-colors">Batal</button>
-            <button onclick="saveData()" id="btn-save" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2">
-                Simpan Data
+        <div class="p-5 border-t border-white/10 bg-dark-800/80 flex justify-end gap-3 sticky bottom-0 backdrop-blur-md">
+            <button onclick="closeFormModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-colors">Batal</button>
+            <button onclick="saveData()" id="btn-save" class="relative overflow-hidden bg-white hover:bg-indigo-50 text-dark-900 px-6 py-2.5 rounded-xl text-sm font-black transition-all shadow-lg shadow-white/10 flex items-center gap-2 group">
+                <span class="relative z-10 flex items-center gap-2" id="btn-save-text">
+                    Deploy Update <i data-lucide="send" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                </span>
             </button>
         </div>
     </div>
 </div>
 
 <!-- Modal: User Stats Detail -->
-<div id="statsModal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-900/80 backdrop-blur-sm" onclick="if(event.target===this) closeStatsModal()">
-    <div class="modal-content glass-panel w-full max-w-md rounded-3xl shadow-2xl border border-white/10 overflow-hidden relative">
-        <button onclick="closeStatsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white bg-dark-800/50 rounded-full p-1 z-10 transition-colors">
+<div id="statsModal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-900/90 backdrop-blur-md" onclick="if(event.target===this) closeStatsModal()">
+    <div class="modal-content glass-panel w-full max-w-sm rounded-[2rem] shadow-2xl shadow-indigo-500/10 border border-white/10 overflow-hidden relative group">
+        <button onclick="closeStatsModal()" class="absolute top-4 right-4 text-white/50 hover:text-white bg-black/20 backdrop-blur-md rounded-full p-1.5 z-20 transition-all hover:scale-110">
             <i data-lucide="x" class="w-5 h-5"></i>
         </button>
-        <div class="relative h-32 bg-gradient-to-br from-indigo-600 to-purple-800">
-            <!-- Decorative -->
-            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-30"></div>
+        <div class="relative h-36 bg-gradient-to-br from-indigo-600 via-purple-600 to-dark-900 overflow-hidden">
+            <!-- Animated particles in banner -->
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==')] opacity-40 animate-pulse-slow"></div>
+            <div class="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-dark-800 to-transparent"></div>
         </div>
-        <div class="px-8 pb-8">
-            <div class="relative flex justify-between items-end -mt-12 mb-6">
-                <div id="stats-avatar" class="w-24 h-24 rounded-2xl bg-dark-800 border-4 border-dark-900 shadow-xl overflow-hidden flex items-center justify-center text-3xl font-bold text-white">
+        <div class="px-8 pb-8 bg-dark-800/80">
+            <div class="relative flex justify-between items-end -mt-14 mb-6">
+                <div id="stats-avatar" class="w-24 h-24 rounded-2xl bg-dark-900 border-4 border-dark-800 shadow-xl overflow-hidden flex items-center justify-center text-4xl font-black text-white relative z-10 group-hover:-translate-y-1 transition-transform duration-300">
                     <!-- Avatar injected here -->
                 </div>
-                <div class="text-right">
-                    <div class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Current Rank</div>
-                    <div id="stats-rank" class="text-3xl font-black text-white leading-none">#1</div>
+                <div class="text-right pb-2">
+                    <div class="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-1">Rank Position</div>
+                    <div id="stats-rank" class="text-4xl font-black text-white leading-none tracking-tighter" style="text-shadow: 0 0 20px rgba(255,255,255,0.2)">#1</div>
                 </div>
             </div>
             
-            <h3 id="stats-nama" class="text-2xl font-bold text-white mb-1">Nama Mahasiswa</h3>
-            <p id="stats-judul" class="text-sm text-slate-400 italic mb-6 line-clamp-3">"Belum ada judul skripsi."</p>
+            <h3 id="stats-nama" class="text-2xl font-bold text-white mb-2 tracking-tight">Nama Mahasiswa</h3>
+            <div class="p-3 bg-dark-900/50 rounded-xl border border-white/5 mb-6">
+                <i data-lucide="book-open" class="w-4 h-4 text-indigo-400 mb-1.5 opacity-50"></i>
+                <p id="stats-judul" class="text-sm text-slate-300 italic font-medium leading-relaxed">"Belum ada judul skripsi."</p>
+            </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="bg-dark-800/50 rounded-xl p-4 border border-white/5">
-                    <div class="text-[10px] font-semibold text-slate-500 uppercase mb-1 truncate" id="stats-p1-name">Dosen 1</div>
-                    <div class="text-xl font-bold text-indigo-400" id="stats-p1-score">0 <span class="text-xs text-slate-500 font-normal">x</span></div>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-dark-900/40 rounded-xl p-4 border border-white/5 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-0.5 bg-indigo-500/50"></div>
+                    <div class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 truncate" id="stats-p1-name">Dosen 1</div>
+                    <div class="text-2xl font-black text-indigo-400 flex items-baseline gap-1" id="stats-p1-score">
+                        0 <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">pts</span>
+                    </div>
                 </div>
-                <div class="bg-dark-800/50 rounded-xl p-4 border border-white/5">
-                    <div class="text-[10px] font-semibold text-slate-500 uppercase mb-1 truncate" id="stats-p2-name">Dosen 2</div>
-                    <div class="text-xl font-bold text-indigo-400" id="stats-p2-score">0 <span class="text-xs text-slate-500 font-normal">x</span></div>
+                <div class="bg-dark-900/40 rounded-xl p-4 border border-white/5 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-0.5 bg-purple-500/50"></div>
+                    <div class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 truncate" id="stats-p2-name">Dosen 2</div>
+                    <div class="text-2xl font-black text-purple-400 flex items-baseline gap-1" id="stats-p2-score">
+                        0 <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">pts</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 flex justify-between items-center">
-                <span class="text-sm font-bold text-indigo-300">Total Bimbingan</span>
-                <span class="text-2xl font-black text-indigo-400" id="stats-total">0</span>
+            <div class="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 rounded-xl p-5 flex justify-between items-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-50"></div>
+                <span class="text-sm font-black text-indigo-200 uppercase tracking-widest relative z-10">Total Power</span>
+                <span class="text-3xl font-black text-white relative z-10" id="stats-total" style="text-shadow: 0 0 15px rgba(99,102,241,0.5)">0</span>
             </div>
         </div>
     </div>
@@ -249,9 +420,29 @@
     }
 
     function getRankTrendIcon(change) {
-        if (!change || change === 0) return '<i data-lucide="minus" class="w-3 h-3 text-slate-500"></i>';
-        if (change > 0) return `<span class="flex items-center justify-center gap-0.5 text-emerald-400"><i data-lucide="chevron-up" class="w-3 h-3"></i>${change}</span>`;
-        return `<span class="flex items-center justify-center gap-0.5 text-red-400"><i data-lucide="chevron-down" class="w-3 h-3"></i>${Math.abs(change)}</span>`;
+        // Jika stabil, ubah menjadi garis datar yang estetik dengan glow
+        if (!change || change === 0) return `
+            <div class="flex items-center justify-center w-full" title="Peringkat Stabil">
+                <div class="w-3 h-1 bg-slate-500/80 rounded-full" style="box-shadow: 0 0 8px rgba(100,116,139,0.6)"></div>
+            </div>`;
+        
+        // Jika naik: Panah tebal custom (bukan bawaan template) dengan efek drop shadow neon
+        if (change > 0) return `
+            <div class="flex items-center justify-center gap-1 text-emerald-400 font-black text-[11px]" title="Naik ${change} Peringkat">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 6px rgba(52,211,153,0.8));">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+                ${change}
+            </div>`;
+        
+        // Jika turun: Panah tebal merah custom dengan drop shadow
+        return `
+            <div class="flex items-center justify-center gap-1 text-rose-500 font-black text-[11px]" title="Turun ${Math.abs(change)} Peringkat">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 6px rgba(244,63,94,0.8));">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                ${Math.abs(change)}
+            </div>`;
     }
 
     async function loadData() {
@@ -276,34 +467,39 @@
 
         // Reorder for display: 2nd, 1st, 3rd
         const displayOrder = [
-            { item: top3[1], rank: 2, height: 'h-48', color: 'silver', class: 'podium-2', glow: 'avatar-glow-2', medal: '#94A3B8' },
-            { item: top3[0], rank: 1, height: 'h-64', color: 'gold', class: 'podium-1', glow: 'avatar-glow-1', medal: '#FBBF24' },
-            { item: top3[2], rank: 3, height: 'h-40', color: 'bronze', class: 'podium-3', glow: 'avatar-glow-3', medal: '#D97706' },
+            { item: top3[1], rank: 2, height: 'h-40 md:h-48', color: 'silver', class: 'podium-2', glow: 'avatar-glow-2', medal: '#94A3B8', delay: '0.5s' },
+            { item: top3[0], rank: 1, height: 'h-48 md:h-64', color: 'gold', class: 'podium-1', glow: 'avatar-glow-1', medal: '#FBBF24', delay: '0.4s' },
+            { item: top3[2], rank: 3, height: 'h-32 md:h-40', color: 'bronze', class: 'podium-3', glow: 'avatar-glow-3', medal: '#D97706', delay: '0.6s' },
         ].filter(x => x.item);
 
         displayOrder.forEach(pos => {
             const avatarContent = pos.item.avatar 
                 ? `<img src="${pos.item.avatar}" class="w-full h-full object-cover" />`
-                : `<span class="text-2xl font-bold text-white">${getInitials(pos.item.nama)}</span>`;
+                : `<span class="text-2xl font-black text-white drop-shadow-md">${getInitials(pos.item.nama)}</span>`;
+
+            const isTop1 = pos.rank === 1;
+            const extraAnim = isTop1 ? 'animate-float' : '';
 
             const el = document.createElement('div');
-            el.className = `flex flex-col items-center justify-end w-full md:w-1/4 cursor-pointer group transition-transform hover:-translate-y-2`;
+            el.className = `flex flex-col items-center justify-end w-full md:w-1/4 cursor-pointer group opacity-0 animate-fade-in-up ${extraAnim}`;
+            el.style.animationDelay = pos.delay;
             el.onclick = () => showStats(allData.indexOf(pos.item));
             
             el.innerHTML = `
-                <div class="relative mb-4">
-                    <div class="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center font-black text-sm z-10 text-dark-900" style="background-color: ${pos.medal}">
+                <div class="relative mb-3 md:mb-5 transition-transform duration-500 group-hover:-translate-y-4">
+                    <div class="absolute -top-3 -right-3 w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-black text-xs md:text-sm z-10 text-dark-900 shadow-lg" style="background-color: ${pos.medal}">
                         ${pos.rank}
                     </div>
-                    <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-dark-800 border-2 overflow-hidden flex items-center justify-center ${pos.glow} transition-all group-hover:scale-105" style="border-color: ${pos.medal}">
+                    <div class="w-16 h-16 md:w-24 md:h-24 rounded-full bg-dark-800 border-2 overflow-hidden flex items-center justify-center ${pos.glow} transition-all duration-500 group-hover:scale-110 group-hover:border-white relative" style="border-color: ${pos.medal}">
                         ${avatarContent}
+                        <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
                     </div>
                 </div>
-                <h3 class="font-bold text-white text-center text-sm md:text-base truncate w-full px-2">${pos.item.nama}</h3>
-                <p class="text-xs text-slate-400 font-semibold mb-3">${pos.item.total} pts</p>
-                <div class="w-full ${pos.height} ${pos.class} rounded-t-xl flex flex-col items-center justify-start pt-4 border-l border-r border-white/5 relative overflow-hidden">
-                    <div class="absolute top-0 w-full flex justify-center mt-3">
-                        <div class="bg-dark-900/50 px-2 py-1 rounded-md text-[10px] backdrop-blur-sm border border-white/5">
+                <h3 class="font-bold text-white text-center text-xs md:text-base truncate w-full px-1 md:px-2 tracking-tight group-hover:text-indigo-300 transition-colors">${pos.item.nama}</h3>
+                <p class="text-[10px] md:text-xs text-indigo-400 font-bold mb-2 md:mb-4 bg-dark-900/50 px-2 py-0.5 rounded-full mt-1 border border-white/5 shadow-inner">${pos.item.total} pts</p>
+                <div class="w-full ${pos.height} ${pos.class} rounded-t-2xl flex flex-col items-center justify-start pt-3 md:pt-4 border-l border-r border-white/5 relative overflow-hidden transition-all duration-500 group-hover:brightness-125 group-hover:shadow-[0_-20px_40px_-10px_rgba(255,255,255,0.1)]">
+                    <div class="absolute top-0 w-full flex justify-center mt-2 md:mt-3">
+                        <div class="bg-dark-900/80 px-2 py-1 rounded-md backdrop-blur-md border border-white/10 shadow-lg">
                             ${getRankTrendIcon(pos.item.rankChange)}
                         </div>
                     </div>
@@ -318,56 +514,63 @@
         tbody.innerHTML = '';
         
         data.forEach((item, idx) => {
-            // Jika masuk top 3, kasih highlight tipis
-            const rowBg = idx < 3 ? 'bg-indigo-900/10' : 'hover:bg-white/[0.02]';
+            const isTop3 = idx < 3;
             const rankColor = idx === 0 ? 'text-gold' : idx === 1 ? 'text-silver' : idx === 2 ? 'text-bronze' : 'text-slate-500';
+            const rowClass = isTop3 ? 'glass-panel-hover bg-white/[0.01]' : 'glass-panel-hover hover:bg-white/[0.03] border-transparent hover:border-white/5';
             
             const avatarContent = item.avatar 
-                ? `<img src="${item.avatar}" class="w-full h-full object-cover" />`
-                : `<span class="text-sm font-bold text-slate-300">${getInitials(item.nama)}</span>`;
+                ? `<img src="${item.avatar}" class="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" />`
+                : `<span class="text-sm font-black text-slate-300">${getInitials(item.nama)}</span>`;
+
+            const delay = 0.5 + (idx * 0.05);
 
             const tr = document.createElement('tr');
-            tr.className = `transition-colors ${rowBg} cursor-pointer`;
+            tr.className = `transition-all duration-300 cursor-pointer opacity-0 animate-fade-in-up border-b border-white/[0.02] last:border-0 group ${rowClass}`;
+            tr.style.animationDelay = `${delay}s`;
             tr.onclick = (e) => {
                 if(!e.target.closest('button')) showStats(idx);
             };
             
             tr.innerHTML = `
-                <td class="px-6 py-4 text-center">
-                    <div class="flex flex-col items-center gap-1">
-                        <span class="font-bold text-lg ${rankColor}">#${idx + 1}</span>
-                        <div class="text-[10px] font-bold bg-dark-900 px-1.5 py-0.5 rounded border border-white/5 w-10 text-center">${getRankTrendIcon(item.rankChange)}</div>
+                <td class="px-6 py-4">
+                    <div class="flex flex-col items-center gap-1.5">
+                        <span class="font-black text-xl md:text-2xl ${rankColor} drop-shadow-sm">${idx + 1}</span>
+                        <div class="bg-dark-900/80 px-2 py-0.5 rounded-md border border-white/5 shadow-inner w-12 text-center flex justify-center">
+                            ${getRankTrendIcon(item.rankChange)}
+                        </div>
                     </div>
                 </td>
                 <td class="px-6 py-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-dark-800 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-dark-800 to-dark-900 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-lg relative group-hover:border-indigo-500/50 transition-colors">
                             ${avatarContent}
                         </div>
                         <div>
-                            <div class="font-bold text-white text-sm md:text-base">${item.nama}</div>
-                            <div class="text-[10px] text-slate-500 uppercase tracking-wider">
-                                ${item.pembimbing1 || '-'} & ${item.pembimbing2 || '-'}
+                            <div class="font-bold text-white text-sm md:text-base group-hover:text-indigo-300 transition-colors tracking-tight">${item.nama}</div>
+                            <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5 flex gap-2">
+                                <span class="bg-dark-900 px-1.5 py-0.5 rounded text-indigo-400/80 border border-white/5 truncate max-w-[80px]">${item.pembimbing1 || '-'}</span>
+                                <span class="bg-dark-900 px-1.5 py-0.5 rounded text-purple-400/80 border border-white/5 truncate max-w-[80px]">${item.pembimbing2 || '-'}</span>
                             </div>
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-4">
-                    <div class="text-sm text-slate-400 italic line-clamp-2 max-w-xs">
-                        ${item.judul || '<span class="text-slate-600">-</span>'}
+                <td class="px-6 py-4 min-w-[200px]">
+                    <div class="text-xs text-slate-400 font-medium italic line-clamp-2 pr-4 leading-relaxed border-l border-white/10 pl-4 py-1">
+                        ${item.judul ? `"${item.judul}"` : '<span class="text-slate-600/50">Menunggu data intelijen...</span>'}
                     </div>
                 </td>
                 <td class="px-6 py-4 text-center">
-                    <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 font-bold border border-indigo-500/20">
-                        ${item.total}
-                    </span>
+                    <div class="inline-flex flex-col items-center justify-center px-4 py-2 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 group-hover:border-indigo-500/50 transition-colors shadow-[0_0_15px_rgba(99,102,241,0.05)]">
+                        <span class="text-xl font-black text-indigo-400 leading-none">${item.total}</span>
+                        <span class="text-[8px] font-bold uppercase tracking-widest text-slate-500 mt-1">Power</span>
+                    </div>
                 </td>
-                <td class="px-6 py-4 text-center">
-                    <div class="flex justify-center gap-2">
-                        <button onclick="event.stopPropagation(); startEdit(${idx})" class="p-2 text-slate-400 hover:text-white hover:bg-indigo-600 rounded-lg transition-colors" title="Edit">
-                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                <td class="px-6 py-4">
+                    <div class="flex justify-center gap-2 opacity-30 group-hover:opacity-100 transition-opacity duration-300">
+                        <button onclick="event.stopPropagation(); startEdit(${idx})" class="p-2.5 text-slate-400 hover:text-white bg-dark-900 hover:bg-indigo-600 border border-white/5 hover:border-transparent rounded-xl transition-all shadow-sm" title="Update Data">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
                         </button>
-                        <button onclick="event.stopPropagation(); hapusData(${idx})" class="p-2 text-slate-400 hover:text-white hover:bg-red-600 rounded-lg transition-colors" title="Delete">
+                        <button onclick="event.stopPropagation(); hapusData(${idx})" class="p-2.5 text-slate-400 hover:text-white bg-dark-900 hover:bg-red-600 border border-white/5 hover:border-transparent rounded-xl transition-all shadow-sm" title="Eliminate">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -378,7 +581,7 @@
         lucide.createIcons();
     }
 
-    // Modal Form Logic
+    // Modal Form Logic (Tetap sama)
     function openFormModal() {
         document.getElementById('formModal').classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -388,15 +591,16 @@
         document.getElementById('formModal').classList.remove('active');
         document.body.style.overflow = 'auto';
         currentEditIndex = -1;
-        document.getElementById('modalTitle').innerText = 'Tambah Progress Baru';
+        document.getElementById('modalTitle').innerHTML = '<i data-lucide="terminal" class="w-5 h-5 text-indigo-400"></i> New Deployment';
+        document.getElementById('btn-save-text').innerHTML = 'Deploy Start <i data-lucide="send" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>';
         
         // Reset form
         const fields = ['nama', 'judul', 'pembimbing1', 'score1', 'pembimbing2', 'score2', 'avatarBase64'];
         fields.forEach(f => document.getElementById(`form-${f}`) ? document.getElementById(`form-${f}`).value = '' : null);
         document.getElementById('avatarBase64').value = '';
         document.getElementById('avatarPreview').innerHTML = `
-            <i data-lucide="camera" class="w-8 h-8 mb-1"></i>
-            <span class="text-[10px] font-bold uppercase tracking-wider">Upload</span>
+            <i data-lucide="camera" class="w-8 h-8 mb-1 opacity-50 group-hover:opacity-100 group-hover:text-indigo-400 transition-all"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider group-hover:text-indigo-400 transition-all">Upload</span>
         `;
         lucide.createIcons();
     }
@@ -404,7 +608,8 @@
     function startEdit(idx) {
         currentEditIndex = idx;
         const item = allData[idx];
-        document.getElementById('modalTitle').innerText = 'Update Progress';
+        document.getElementById('modalTitle').innerHTML = '<i data-lucide="terminal" class="w-5 h-5 text-indigo-400"></i> Update Deployment';
+        document.getElementById('btn-save-text').innerHTML = 'Re-Deploy <i data-lucide="refresh-cw" class="w-4 h-4 group-hover:rotate-180 transition-transform duration-500"></i>';
         
         document.getElementById('form-nama').value = item.nama || '';
         document.getElementById('form-judul').value = item.judul || '';
@@ -418,22 +623,21 @@
             document.getElementById('avatarPreview').innerHTML = `<img src="${item.avatar}" class="w-full h-full object-cover" />`;
         } else {
             document.getElementById('avatarPreview').innerHTML = `
-                <i data-lucide="camera" class="w-8 h-8 mb-1"></i>
-                <span class="text-[10px] font-bold uppercase tracking-wider">Upload</span>
+                <i data-lucide="camera" class="w-8 h-8 mb-1 opacity-50 group-hover:opacity-100 group-hover:text-indigo-400 transition-all"></i>
+                <span class="text-[10px] font-bold uppercase tracking-wider group-hover:text-indigo-400 transition-all">Upload</span>
             `;
             lucide.createIcons();
         }
         openFormModal();
     }
 
-    // Image Upload Logic
+    // Image Upload Logic (Tetap sama)
     function handleImageUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
 
-        // Check size (max 1MB)
         if (file.size > 1024 * 1024) {
-            alert('Ukuran gambar terlalu besar! Maksimal 1MB.');
+            alert('File too large! Max 1MB allowed.');
             event.target.value = '';
             return;
         }
@@ -448,9 +652,10 @@
     }
 
     async function saveData() {
-        const btn = document.getElementById('btn-save');
-        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menyimpan...';
-        btn.disabled = true;
+        const btnText = document.getElementById('btn-save-text');
+        const originalHtml = btnText.innerHTML;
+        btnText.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Syncing...';
+        document.getElementById('btn-save').disabled = true;
         lucide.createIcons();
 
         const payload = {
@@ -464,8 +669,10 @@
         };
 
         if (!payload.nama) {
-            alert('Nama wajib diisi!');
-            btn.innerHTML = 'Simpan Data'; btn.disabled = false;
+            alert('Identity Call Sign (Nama) is required!');
+            btnText.innerHTML = originalHtml; 
+            document.getElementById('btn-save').disabled = false;
+            lucide.createIcons();
             return;
         }
 
@@ -482,23 +689,23 @@
             closeFormModal();
             await loadData();
         } catch (e) {
-            alert('Gagal menyimpan data.');
+            alert('Upload sequence failed.');
         } finally {
-            btn.innerHTML = 'Simpan Data'; btn.disabled = false;
+            document.getElementById('btn-save').disabled = false;
         }
     }
 
     async function hapusData(idx) {
-        if (!confirm('Yakin ingin menghapus data ini?')) return;
+        if (!confirm('Eliminate this record permanently?')) return;
         try {
             await fetch(`/api?index=${idx}`, { method: 'DELETE' });
             await loadData();
         } catch (e) {
-            alert('Gagal menghapus.');
+            alert('Elimination failed.');
         }
     }
 
-    // Modal Stats Logic
+    // Modal Stats Logic (Tetap sama, hanya class UI yang dipanggil dari HTML)
     function showStats(idx) {
         const item = allData[idx];
         if (!item) return;
@@ -508,13 +715,22 @@
 
         document.getElementById('stats-rank').innerText = `#${idx + 1}`;
         document.getElementById('stats-nama').innerText = item.nama;
-        document.getElementById('stats-judul').innerHTML = item.judul ? `"${item.judul}"` : '<span class="text-slate-600">Belum ada judul skripsi.</span>';
+        
+        if (item.judul) {
+            document.getElementById('stats-judul').innerHTML = `"${item.judul}"`;
+            document.getElementById('stats-judul').classList.remove('text-slate-600/50');
+            document.getElementById('stats-judul').classList.add('text-slate-300');
+        } else {
+            document.getElementById('stats-judul').innerHTML = 'Misi Intelijen Belum Diketahui.';
+            document.getElementById('stats-judul').classList.add('text-slate-600/50');
+            document.getElementById('stats-judul').classList.remove('text-slate-300');
+        }
         
         document.getElementById('stats-p1-name').innerText = item.pembimbing1 || 'Dosen 1';
-        document.getElementById('stats-p1-score').innerHTML = `${item.score1 || 0} <span class="text-xs text-slate-500 font-normal">pts</span>`;
+        document.getElementById('stats-p1-score').innerHTML = `${item.score1 || 0} <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">pts</span>`;
         
         document.getElementById('stats-p2-name').innerText = item.pembimbing2 || 'Dosen 2';
-        document.getElementById('stats-p2-score').innerHTML = `${item.score2 || 0} <span class="text-xs text-slate-500 font-normal">pts</span>`;
+        document.getElementById('stats-p2-score').innerHTML = `${item.score2 || 0} <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">pts</span>`;
         
         document.getElementById('stats-total').innerText = item.total;
 
@@ -541,7 +757,29 @@
         renderList(filtered);
     }
 
+    // Interactions
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('main-nav');
+        if (!nav) return;
+        if (window.scrollY > 20) {
+            nav.classList.remove('w-fit');
+            nav.classList.add('w-full', 'max-w-7xl');
+        } else {
+            nav.classList.add('w-fit');
+            nav.classList.remove('w-full', 'max-w-7xl');
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        const bg = document.getElementById('ambient-bg');
+        if (!bg) return;
+        const x = (e.clientX / window.innerWidth - 0.5) * 30;
+        const y = (e.clientY / window.innerHeight - 0.5) * 30;
+        bg.style.transform = `translate(${x}px, ${y}px)`;
+    });
+
     loadData();
+
 </script>
 
 </body>
