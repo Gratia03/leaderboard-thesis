@@ -174,6 +174,37 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+
+        /* Tab Switcher Styles */
+        .tab-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.2s;
+            white-space: nowrap;
+            line-height: 1;
+        }
+        .tab-btn svg {
+            display: inline-block !important;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+        .tab-btn.active {
+            background: white;
+            color: #050810;
+            box-shadow: 0 10px 15px -3px rgba(255,255,255,0.1);
+        }
+        .tab-btn:not(.active) {
+            color: #64748b;
+        }
+        .tab-btn:not(.active):hover {
+            color: #e2e8f0;
+            background: rgba(255,255,255,0.05);
+        }
     </style>
 </head>
 <body class="text-slate-300 min-h-screen relative z-0">
@@ -238,7 +269,7 @@
 <div class="max-w-7xl mx-auto px-4 md:px-6 pt-32 md:pt-44 pb-12">
 
     <!-- Podium Section (Top 3) -->
-    <div class="mb-12 md:mb-20">
+    <div id="podium-section" class="mb-12 md:mb-20">
         <div class="text-center mb-8 md:mb-14 opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
             <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Top Performers</h2>
             <div class="h-1 w-12 bg-gradient-to-r from-indigo-500 to-purple-500 mx-auto mt-4 rounded-full"></div>
@@ -249,8 +280,33 @@
         </div>
     </div>
 
-    <!-- Leaderboard List -->
-    <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl opacity-0 animate-fade-in-up border border-white/5" style="animation-delay: 0.3s;">
+    <!-- Dosen Podium Section (shown above tab switcher when dosen tab is active) -->
+    <div id="dosen-podium-section" class="hidden mb-12 md:mb-20">
+        <div class="text-center mb-8 md:mb-14">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Top Supervisors</h2>
+            <div class="h-1 w-12 bg-gradient-to-r from-purple-500 to-indigo-500 mx-auto mt-4 rounded-full"></div>
+        </div>
+        <div id="dosen-podium-container" class="flex flex-row items-end justify-center gap-2 sm:gap-6 md:gap-8 lg:gap-12 min-h-[250px] md:min-h-[350px]">
+        </div>
+    </div>
+
+    <!-- Tab Switcher -->
+    <div class="flex justify-center mb-8 opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">
+        <div class="inline-flex items-center bg-dark-800/60 p-1 rounded-2xl border border-white/5 backdrop-blur-sm">
+            <button onclick="switchTab('mahasiswa')" id="tab-mahasiswa" class="tab-btn active">
+                <i data-lucide="users" class="w-4 h-4 shrink-0" style="display:inline-block;vertical-align:middle;"></i>
+                <span style="vertical-align:middle;">Mahasiswa</span>
+            </button>
+            <div class="w-px h-5 bg-white/10 mx-1"></div>
+            <button onclick="switchTab('dosen')" id="tab-dosen" class="tab-btn">
+                <i data-lucide="briefcase" class="w-4 h-4 shrink-0" style="display:inline-block;vertical-align:middle;"></i>
+                <span style="vertical-align:middle;">Dosen</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Leaderboard List (Mahasiswa) -->
+    <div id="view-mahasiswa" class="leaderboard-view glass-panel rounded-2xl overflow-hidden shadow-2xl opacity-0 animate-fade-in-up border border-white/5" style="animation-delay: 0.3s;">
         <div class="p-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/[0.02]">
             <h3 class="text-lg font-bold text-white flex items-center gap-2">
                 <i data-lucide="activity" class="w-5 h-5 text-indigo-400"></i> Standings
@@ -280,9 +336,36 @@
                 </tbody>
             </table>
         </div>
-        <div id="loading-status" class="py-20 text-center text-indigo-400">
-            <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto opacity-50"></i>
+    </div>
+
+    <!-- Leaderboard View (Dosen) -->
+    <div id="view-dosen" class="leaderboard-view hidden glass-panel rounded-2xl overflow-hidden shadow-2xl opacity-0 animate-fade-in-up border border-white/5">
+        <div class="p-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/[0.02]">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="award" class="w-5 h-5 text-purple-400"></i> Lecturer Performance
+            </h3>
+            <p class="text-xs text-slate-500 font-medium">Berdasarkan total poin bimbingan mahasiswa.</p>
         </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-dark-900/30 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-white/5">
+                        <th class="px-6 py-5 w-20 text-center">Rank</th>
+                        <th class="px-6 py-5">Dosen Pembimbing</th>
+                        <th class="px-6 py-5 text-center">Anak Bimbingan</th>
+                        <th class="px-6 py-5 text-center">Total Poin</th>
+                    </tr>
+                </thead>
+                <tbody id="lecturer-list" class="divide-y divide-white/[0.02]">
+                    <!-- Lecturer List injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="loading-status" class="py-20 text-center text-indigo-400">
+        <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto opacity-50"></i>
     </div>
 </div>
 
@@ -443,6 +526,26 @@
 <script>
     let allData = [];
     let currentEditIndex = -1;
+    let activeTab = 'mahasiswa';
+
+    // Dosen prefix mapping
+    const DOSEN_PREFIX = {
+        'chelsi': 'Ibu',
+        'aloy': 'Pak',
+        'sri': 'Pak',
+        'dewi': 'Ibu',
+        'eddi': 'Pak',
+        'cindy': 'Ibu',
+    };
+
+    function getDosenDisplayName(name) {
+        if (!name) return name;
+        const key = name.toLowerCase().trim();
+        for (const [dosenName, prefix] of Object.entries(DOSEN_PREFIX)) {
+            if (key.includes(dosenName)) return `${prefix} ${name}`;
+        }
+        return name;
+    }
 
     // Utilitas
     function getInitials(name) {
@@ -480,14 +583,37 @@
         try {
             const res = await fetch('/api');
             allData = await res.json();
-            renderPodium(allData.slice(0, 3));
-            renderList(allData);
+            
+            if (activeTab === 'mahasiswa') {
+                renderPodium(allData.slice(0, 3));
+                renderList(allData);
+            } else {
+                renderLecturerList();
+            }
         } catch (e) {
             console.error('Error fetching data:', e);
         } finally {
             document.getElementById('loading-status').style.display = 'none';
             lucide.createIcons();
         }
+    }
+
+    function switchTab(tab) {
+        activeTab = tab;
+        
+        // Update Buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`tab-${tab}`).classList.add('active');
+        
+        // Update Views
+        document.querySelectorAll('.leaderboard-view').forEach(view => view.classList.add('hidden'));
+        document.getElementById(`view-${tab}`).classList.remove('hidden');
+        
+        // Show correct podium section per tab
+        document.getElementById('podium-section').style.display = tab === 'mahasiswa' ? 'block' : 'none';
+        document.getElementById('dosen-podium-section').style.display = tab === 'dosen' ? 'block' : 'none';
+        
+        loadData();
     }
 
     function renderPodium(top3) {
@@ -580,8 +706,8 @@
                         <div>
                             <div class="font-bold text-white text-sm md:text-base group-hover:text-indigo-300 transition-colors tracking-tight">${item.nama}</div>
                             <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5 flex gap-2">
-                                <span class="bg-dark-900 px-1.5 py-0.5 rounded text-indigo-400/80 border border-white/5 truncate max-w-[80px]">${item.pembimbing1 || '-'}</span>
-                                <span class="bg-dark-900 px-1.5 py-0.5 rounded text-purple-400/80 border border-white/5 truncate max-w-[80px]">${item.pembimbing2 || '-'}</span>
+                                <span class="bg-dark-900 px-1.5 py-0.5 rounded text-indigo-400/80 border border-white/5 truncate max-w-[100px]">${item.pembimbing1 ? getDosenDisplayName(item.pembimbing1) : '-'}</span>
+                                <span class="bg-dark-900 px-1.5 py-0.5 rounded text-purple-400/80 border border-white/5 truncate max-w-[100px]">${item.pembimbing2 ? getDosenDisplayName(item.pembimbing2) : '-'}</span>
                             </div>
                         </div>
                     </div>
@@ -610,6 +736,129 @@
         lucide.createIcons();
     }
 
+    function renderDosenPodium(top3) {
+        const container = document.getElementById('dosen-podium-container');
+        container.innerHTML = '';
+        if (top3.length === 0) return;
+
+        const displayOrder = [
+            { item: top3[1], rank: 2, height: 'h-40 md:h-48', class: 'podium-2', glow: 'avatar-glow-2', medal: '#94A3B8', delay: '0.5s' },
+            { item: top3[0], rank: 1, height: 'h-48 md:h-64', class: 'podium-1', glow: 'avatar-glow-1', medal: '#FBBF24', delay: '0.4s' },
+            { item: top3[2], rank: 3, height: 'h-32 md:h-40', class: 'podium-3', glow: 'avatar-glow-3', medal: '#D97706', delay: '0.6s' },
+        ].filter(x => x.item);
+
+        displayOrder.forEach(pos => {
+            const displayName = getDosenDisplayName(pos.item.name);
+            const initial = pos.item.name.charAt(0).toUpperCase();
+            const isTop1 = pos.rank === 1;
+            const extraAnim = isTop1 ? 'animate-float' : '';
+
+            const el = document.createElement('div');
+            el.className = `flex flex-col items-center justify-end w-full md:w-1/4 group opacity-0 animate-fade-in-up`;
+            el.style.animationDelay = pos.delay;
+
+            el.innerHTML = `
+                <div class="${extraAnim} w-full flex flex-col items-center justify-end">
+                    <div class="relative mb-3 md:mb-5 transition-transform duration-500 group-hover:-translate-y-4">
+                        <div class="absolute -top-3 -right-3 w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-black text-xs md:text-sm z-10 text-dark-900 shadow-lg" style="background-color: ${pos.medal}">
+                            ${pos.rank}
+                        </div>
+                        <div class="w-16 h-16 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-purple-600/40 to-indigo-600/30 border-2 overflow-hidden flex items-center justify-center ${pos.glow} transition-all duration-500 group-hover:scale-110 relative" style="border-color: ${pos.medal}">
+                            <span class="text-2xl font-black text-white drop-shadow-md">${initial}</span>
+                            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-white text-center text-xs md:text-base truncate w-full px-1 md:px-2 tracking-tight group-hover:text-purple-300 transition-colors">${displayName}</h3>
+                    <p class="text-[10px] md:text-xs text-purple-400 font-bold mb-2 md:mb-4 bg-dark-900/50 px-2 py-0.5 rounded-full mt-1 border border-white/5 shadow-inner">${pos.item.points} pts</p>
+                    <div class="w-full ${pos.height} ${pos.class} rounded-t-2xl flex flex-col items-center justify-start pt-3 md:pt-4 border-l border-r border-white/5 relative overflow-hidden transition-all duration-500 group-hover:brightness-125">
+                        <div class="absolute top-0 w-full flex justify-center mt-2 md:mt-3">
+                            <div class="bg-dark-900/80 px-2 py-1 rounded-md backdrop-blur-md border border-white/10 shadow-lg text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                                ${pos.item.studentCount} mhs
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(el);
+        });
+    }
+
+    function renderLecturerList() {
+        const tbody = document.getElementById('lecturer-list');
+        tbody.innerHTML = '';
+
+        // Aggregate Data
+        const lecturers = {};
+        allData.forEach(student => {
+            if (student.pembimbing1) {
+                if (!lecturers[student.pembimbing1]) lecturers[student.pembimbing1] = { students: [], points: 0 };
+                lecturers[student.pembimbing1].students.push(student.nama);
+                lecturers[student.pembimbing1].points += (student.score1 || 0);
+            }
+            if (student.pembimbing2) {
+                if (!lecturers[student.pembimbing2]) lecturers[student.pembimbing2] = { students: [], points: 0 };
+                lecturers[student.pembimbing2].students.push(student.nama);
+                lecturers[student.pembimbing2].points += (student.score2 || 0);
+            }
+        });
+
+        // Convert to array and sort
+        const sortedLecturers = Object.keys(lecturers).map(name => ({
+            name,
+            studentCount: lecturers[name].students.length,
+            points: lecturers[name].points,
+            studentList: lecturers[name].students.join(', ')
+        })).sort((a, b) => b.points - a.points);
+
+        renderDosenPodium(sortedLecturers.slice(0, 3));
+
+        sortedLecturers.forEach((lecturer, idx) => {
+            const isTop3 = idx < 3;
+            const rankColor = idx === 0 ? 'text-gold' : idx === 1 ? 'text-silver' : idx === 2 ? 'text-bronze' : 'text-slate-500';
+            const rowClass = isTop3 ? 'glass-panel-hover bg-white/[0.01]' : 'glass-panel-hover hover:bg-white/[0.03]';
+            const displayName = getDosenDisplayName(lecturer.name);
+            const initial = lecturer.name.charAt(0).toUpperCase();
+            const delay = 0.5 + (idx * 0.05);
+
+            const tr = document.createElement('tr');
+            tr.className = `transition-all duration-300 opacity-0 animate-fade-in-up border-b border-white/[0.02] last:border-0 group ${rowClass}`;
+            tr.style.animationDelay = `${delay}s`;
+
+            tr.innerHTML = `
+                <td class="px-6 py-4 text-center">
+                    <span class="font-black text-xl md:text-2xl ${rankColor} drop-shadow-sm">${idx + 1}</span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600/20 to-indigo-600/20 border border-white/10 flex items-center justify-center flex-shrink-0 shadow-lg group-hover:border-purple-500/50 transition-colors">
+                            <span class="text-lg font-black text-purple-300">${initial}</span>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white text-sm md:text-base group-hover:text-purple-300 transition-colors tracking-tight">${displayName}</div>
+                            <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+                                <span class="bg-dark-900 px-1.5 py-0.5 rounded text-purple-400/80 border border-white/5">Dosen Pembimbing</span>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <div class="flex flex-col items-center">
+                        <span class="text-lg font-bold text-white">${lecturer.studentCount}</span>
+                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest" title="${lecturer.studentList}">Mahasiswa</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <div class="inline-flex flex-col items-center justify-center px-4 py-2 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20 group-hover:border-purple-500/50 transition-colors shadow-[0_0_15px_rgba(168,85,247,0.05)]">
+                        <span class="text-xl font-black text-purple-400 leading-none">${lecturer.points}</span>
+                        <span class="text-[8px] font-bold uppercase tracking-widest text-slate-500 mt-1">Total Pts</span>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        lucide.createIcons();
+    }
+
     // Modal Form Logic (Tetap sama)
     function openFormModal() {
         document.getElementById('formModal').classList.add('active');
@@ -623,7 +872,15 @@
         document.getElementById('modalTitle').innerHTML = '<i data-lucide="terminal" class="w-5 h-5 text-indigo-400"></i> New Deployment';
         document.getElementById('btn-save-text').innerHTML = 'Deploy Start <i data-lucide="send" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>';
         
-        // Reset form
+        // Reset form - re-enable greyed fields
+        const namaInput = document.getElementById('form-nama');
+        namaInput.disabled = false;
+        namaInput.classList.remove('opacity-40', 'cursor-not-allowed', 'select-none');
+        ['pembimbing1', 'pembimbing2'].forEach(field => {
+            const el = document.getElementById(`form-${field}`);
+            el.disabled = false;
+            el.classList.remove('opacity-40', 'cursor-not-allowed', 'select-none');
+        });
         const fields = ['nama', 'judul', 'pembimbing1', 'score1', 'pembimbing2', 'score2', 'avatarBase64'];
         fields.forEach(f => document.getElementById(`form-${f}`) ? document.getElementById(`form-${f}`).value = '' : null);
         document.getElementById('avatarBase64').value = '';
@@ -640,11 +897,21 @@
         document.getElementById('modalTitle').innerHTML = '<i data-lucide="terminal" class="w-5 h-5 text-indigo-400"></i> Update Deployment';
         document.getElementById('btn-save-text').innerHTML = 'Re-Deploy <i data-lucide="refresh-cw" class="w-4 h-4 group-hover:rotate-180 transition-transform duration-500"></i>';
         
-        document.getElementById('form-nama').value = item.nama || '';
+        const namaInput = document.getElementById('form-nama');
+        namaInput.value = item.nama || '';
+        namaInput.disabled = true;
+        namaInput.classList.add('opacity-40', 'cursor-not-allowed', 'select-none');
         document.getElementById('form-judul').value = item.judul || '';
-        document.getElementById('form-pembimbing1').value = item.pembimbing1 || '';
+        const p1Input = document.getElementById('form-pembimbing1');
+        p1Input.value = item.pembimbing1 ? getDosenDisplayName(item.pembimbing1) : '';
+        p1Input.disabled = true;
+        p1Input.classList.add('opacity-40', 'cursor-not-allowed', 'select-none');
         document.getElementById('form-score1').value = item.score1 || 0;
-        document.getElementById('form-pembimbing2').value = item.pembimbing2 || '';
+
+        const p2Input = document.getElementById('form-pembimbing2');
+        p2Input.value = item.pembimbing2 ? getDosenDisplayName(item.pembimbing2) : '';
+        p2Input.disabled = true;
+        p2Input.classList.add('opacity-40', 'cursor-not-allowed', 'select-none');
         document.getElementById('form-score2').value = item.score2 || 0;
         
         document.getElementById('avatarBase64').value = item.avatar || '';
@@ -721,12 +988,13 @@
         document.getElementById('btn-save').disabled = true;
         lucide.createIcons();
 
+        const isEditing = currentEditIndex > -1;
         const payload = {
-            nama: document.getElementById('form-nama').value.trim(),
+            nama: isEditing ? allData[currentEditIndex].nama : document.getElementById('form-nama').value.trim(),
             judul: document.getElementById('form-judul').value.trim(),
-            pembimbing1: document.getElementById('form-pembimbing1').value.trim(),
+            pembimbing1: isEditing ? allData[currentEditIndex].pembimbing1 : document.getElementById('form-pembimbing1').value.trim(),
             score1: document.getElementById('form-score1').value,
-            pembimbing2: document.getElementById('form-pembimbing2').value.trim(),
+            pembimbing2: isEditing ? allData[currentEditIndex].pembimbing2 : document.getElementById('form-pembimbing2').value.trim(),
             score2: document.getElementById('form-score2').value,
             avatar: document.getElementById('avatarBase64').value
         };
@@ -740,8 +1008,8 @@
         }
 
         try {
-            const method = currentEditIndex > -1 ? 'PUT' : 'POST';
-            if (currentEditIndex > -1) payload.index = currentEditIndex;
+            const method = isEditing ? 'PUT' : 'POST';
+            if (isEditing) payload.index = currentEditIndex;
 
             await fetch('/api', {
                 method,
@@ -779,10 +1047,10 @@
             document.getElementById('stats-judul').classList.remove('text-slate-300');
         }
         
-        document.getElementById('stats-p1-name').innerText = item.pembimbing1 || 'Dosen 1';
+        document.getElementById('stats-p1-name').innerText = item.pembimbing1 ? getDosenDisplayName(item.pembimbing1) : 'Dosen 1';
         document.getElementById('stats-p1-score').innerHTML = `${item.score1 || 0} <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">pts</span>`;
-        
-        document.getElementById('stats-p2-name').innerText = item.pembimbing2 || 'Dosen 2';
+
+        document.getElementById('stats-p2-name').innerText = item.pembimbing2 ? getDosenDisplayName(item.pembimbing2) : 'Dosen 2';
         document.getElementById('stats-p2-score').innerHTML = `${item.score2 || 0} <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">pts</span>`;
         
         document.getElementById('stats-total').innerText = item.total;
