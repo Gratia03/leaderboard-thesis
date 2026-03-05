@@ -157,6 +157,20 @@
         .modal-content { transform: translateY(20px) scale(0.95); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .modal.active .modal-content { transform: translateY(0) scale(1); }
 
+        /* Custom Number Input Stepper */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .stepper-btn {
+            @apply flex items-center justify-center text-slate-500 hover:text-white transition-all active:scale-95;
+        }
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
@@ -327,7 +341,15 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-semibold text-slate-500 uppercase">Skor Bimbingan</label>
-                        <input type="number" id="form-score1" min="0" placeholder="0" class="w-full bg-dark-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-indigo-500 outline-none mt-1 font-bold text-indigo-300 transition-all">
+                        <div class="relative flex items-center mt-1 group/stepper">
+                            <button type="button" onclick="document.getElementById('form-score1').stepDown()" class="stepper-btn absolute left-0 h-full px-3 border-r border-white/5 z-10">
+                                <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <input type="number" id="form-score1" min="0" placeholder="0" class="w-full bg-dark-900 border border-white/10 rounded-lg py-2.5 text-center text-sm text-white focus:border-indigo-500 outline-none font-bold text-indigo-300 transition-all">
+                            <button type="button" onclick="document.getElementById('form-score1').stepUp()" class="stepper-btn absolute right-0 h-full px-3 border-l border-white/5 z-10">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="space-y-3 bg-dark-800/40 p-5 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-colors group">
@@ -340,7 +362,15 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-semibold text-slate-500 uppercase">Skor Bimbingan</label>
-                        <input type="number" id="form-score2" min="0" placeholder="0" class="w-full bg-dark-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-purple-500 outline-none mt-1 font-bold text-purple-300 transition-all">
+                        <div class="relative flex items-center mt-1 group/stepper">
+                            <button type="button" onclick="document.getElementById('form-score2').stepDown()" class="stepper-btn absolute left-0 h-full px-3 border-r border-white/5 z-10">
+                                <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <input type="number" id="form-score2" min="0" placeholder="0" class="w-full bg-dark-900 border border-white/10 rounded-lg py-2.5 text-center text-sm text-white focus:border-purple-500 outline-none font-bold text-purple-300 transition-all">
+                            <button type="button" onclick="document.getElementById('form-score2').stepUp()" class="stepper-btn absolute right-0 h-full px-3 border-l border-white/5 z-10">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
