@@ -639,7 +639,7 @@
             const el = document.createElement('div');
             el.className = `flex flex-col items-center justify-end w-full md:w-1/4 cursor-pointer group opacity-0 animate-fade-in-up`;
             el.style.animationDelay = pos.delay;
-            el.onclick = () => showStats(pos.item.id);
+            el.onclick = () => showStats(pos.item.id || pos.item.nama);
             
             el.innerHTML = `
                 <div class="${extraAnim} w-full flex flex-col items-center justify-end">
@@ -686,7 +686,7 @@
             tr.className = `transition-all duration-300 cursor-pointer opacity-0 animate-fade-in-up border-b border-white/[0.02] last:border-0 group ${rowClass}`;
             tr.style.animationDelay = `${delay}s`;
             tr.onclick = (e) => {
-                if(!e.target.closest('button')) showStats(item.id);
+                if(!e.target.closest('button')) showStats(item.id || item.nama);
             };
 
             tr.innerHTML = `
@@ -725,7 +725,7 @@
                 </td>
                 <td class="px-6 py-4">
                     <div class="flex justify-center gap-2 opacity-30 group-hover:opacity-100 transition-opacity duration-300">
-                        <button onclick="event.stopPropagation(); startEdit('${item.id}')" class="p-2.5 text-slate-400 hover:text-white bg-dark-900 hover:bg-indigo-600 border border-white/5 hover:border-transparent rounded-xl transition-all shadow-sm" title="Update Data">
+                        <button onclick="event.stopPropagation(); startEdit('${item.id || item.nama}')" class="p-2.5 text-slate-400 hover:text-white bg-dark-900 hover:bg-indigo-600 border border-white/5 hover:border-transparent rounded-xl transition-all shadow-sm" title="Update Data">
                             <i data-lucide="edit-3" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -892,7 +892,7 @@
     }
 
     function startEdit(id) {
-        const item = allData.find(d => d.id === id);
+        const item = allData.find(d => (d.id || d.nama) === id);
         if (!item) return;
         currentEditId = id;
         document.getElementById('modalTitle').innerHTML = '<i data-lucide="terminal" class="w-5 h-5 text-indigo-400"></i> Update Deployment';
@@ -990,7 +990,7 @@
         lucide.createIcons();
 
         const isEditing = currentEditId !== null;
-        const editingItem = isEditing ? allData.find(d => d.id === currentEditId) : null;
+        const editingItem = isEditing ? allData.find(d => (d.id || d.nama) === currentEditId) : null;
         const payload = {
             nama: isEditing ? editingItem.nama : document.getElementById('form-nama').value.trim(),
             judul: document.getElementById('form-judul').value.trim(),
@@ -1048,7 +1048,7 @@
 
     // Modal Stats Logic (Tetap sama, hanya class UI yang dipanggil dari HTML)
     function showStats(id) {
-        const idx = allData.findIndex(d => d.id === id);
+        const idx = allData.findIndex(d => (d.id || d.nama) === id);
         const item = allData[idx];
         if (!item) return;
 

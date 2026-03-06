@@ -32,6 +32,11 @@ async function withLock(fn) {
 }
 
 function updateRanks(data) {
+    // Assign ID ke item lama yang belum punya
+    data.forEach(item => {
+        if (!item.id) item.id = Date.now().toString() + '-' + Math.random().toString(36).slice(2, 7);
+    });
+
     // Simpan rank sebelumnya
     const beforeSort = data.map((item, idx) => ({ id: item.id || item.nama, rank: idx }));
     
@@ -115,7 +120,7 @@ export default async function handler(req, res) {
         try {
             const result = await withLock(async () => {
                 let currentData = (await redis.get(DATA_KEY)) || [];
-                const itemIndex = currentData.findIndex(item => item.id === id);
+                const itemIndex = currentData.findIndex(item => item.id === id || item.nama === id);
                 if (itemIndex === -1) {
                     const err = new Error('NOT_FOUND');
                     err.code = 'NOT_FOUND';
