@@ -6,6 +6,30 @@ const redis = new Redis({
 });
 
 const DATA_KEY = 'data_skripsi_kelas';
+const LOCK_KEY = `${DATA_KEY}:lock`;
+const LOCK_TTL = 5; // seconds
+
+async function withLock(fn) {
+    const lockValue = `${Date.now()}-${Math.random()}`;
+
+    // Atomic: set only if key doesn't exist (NX), auto-expire (EX)
+    const acquired = await redis.set(LOCK_KEY, lockValue, { nx: true, ex: LOCK_TTL });
+    if (!acquired) {
+        const err = new Error('LOCKED');
+        err.code = 'LOCKED';
+        throw err;
+    }
+
+    try {
+        return await fn();
+    } finally {
+        // Only release lock if we still own it (prevents releasing another process's lock)
+        const current = await redis.get(LOCK_KEY);
+        if (current === lockValue) {
+            await redis.del(LOCK_KEY);
+        }
+    }
+}
 
 function updateRanks(data) {
     // Simpan rank sebelumnya
@@ -35,67 +59,91 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
         const { nama, pembimbing1, score1, pembimbing2, score2, avatar, judul } = req.body;
-        let currentData = (await redis.get(DATA_KEY)) || [];
-        
-        const total = parseInt(score1 || 0) + parseInt(score2 || 0);
-        currentData.push({ 
-            id: Date.now().toString(),
-            nama, 
-            pembimbing1, 
-            score1: parseInt(score1 || 0), 
-            pembimbing2, 
-            score2: parseInt(score2 || 0), 
-            total,
-            avatar: avatar || null,
-            judul: judul || '',
-            rankChange: 0
-        });
-        
-        currentData = updateRanks(currentData);
-        await redis.set(DATA_KEY, JSON.stringify(currentData));
-        return res.status(200).json(currentData);
+        try {
+            const result = await withLock(async () => {
+                let currentData = (await redis.get(DATA_KEY)) || [];
+                const total = parseInt(score1 || 0) + parseInt(score2 || 0);
+                currentData.push({
+                    id: Date.now().toString(),
+                    nama,
+                    pembimbing1,
+                    score1: parseInt(score1 || 0),
+                    pembimbing2,
+                    score2: parseInt(score2 || 0),
+                    total,
+                    avatar: avatar || null,
+                    judul: judul || '',
+                    rankChange: 0
+                });
+                currentData = updateRanks(currentData);
+                await redis.set(DATA_KEY, JSON.stringify(currentData));
+                return currentData;
+            });
+            return res.status(200).json(result);
+        } catch (e) {
+            if (e.code === 'LOCKED') return res.status(409).json({ code: 'CONCURRENT_UPDATE', message: 'Server sedang digunakan, coba lagi dalam 1-2 detik.' });
+            throw e;
+        }
     }
 
     if (req.method === 'DELETE') {
-        const { index } = req.query;
-        let currentData = (await redis.get(DATA_KEY)) || [];
-        if (index >= 0 && index < currentData.length) {
-            currentData.splice(index, 1);
-            currentData = updateRanks(currentData);
-            await redis.set(DATA_KEY, JSON.stringify(currentData));
-            return res.status(200).json(currentData);
+        const { id } = req.query;
+        try {
+            const result = await withLock(async () => {
+                let currentData = (await redis.get(DATA_KEY)) || [];
+                const itemIndex = currentData.findIndex(item => item.id === id);
+                if (itemIndex === -1) {
+                    const err = new Error('NOT_FOUND');
+                    err.code = 'NOT_FOUND';
+                    throw err;
+                }
+                currentData.splice(itemIndex, 1);
+                currentData = updateRanks(currentData);
+                await redis.set(DATA_KEY, JSON.stringify(currentData));
+                return currentData;
+            });
+            return res.status(200).json(result);
+        } catch (e) {
+            if (e.code === 'LOCKED') return res.status(409).json({ code: 'CONCURRENT_UPDATE', message: 'Server sedang digunakan, coba lagi dalam 1-2 detik.' });
+            if (e.code === 'NOT_FOUND') return res.status(404).json({ code: 'NOT_FOUND', message: 'Data tidak ditemukan.' });
+            throw e;
         }
-        return res.status(400).json({ error: 'Index tidak valid' });
     }
 
     if (req.method === 'PUT') {
-        const { index, nama, pembimbing1, score1, pembimbing2, score2, avatar, judul, reset } = req.body;
-        
-        if (reset) {
-            return res.status(400).json({ error: 'Reset disabled for new structure' });
+        const { id, nama, pembimbing1, score1, pembimbing2, score2, avatar, judul } = req.body;
+        try {
+            const result = await withLock(async () => {
+                let currentData = (await redis.get(DATA_KEY)) || [];
+                const itemIndex = currentData.findIndex(item => item.id === id);
+                if (itemIndex === -1) {
+                    const err = new Error('NOT_FOUND');
+                    err.code = 'NOT_FOUND';
+                    throw err;
+                }
+                const total = parseInt(score1 || 0) + parseInt(score2 || 0);
+                const existing = currentData[itemIndex];
+                currentData[itemIndex] = {
+                    ...existing,
+                    nama,
+                    pembimbing1,
+                    score1: parseInt(score1 || 0),
+                    pembimbing2,
+                    score2: parseInt(score2 || 0),
+                    total,
+                    avatar: avatar !== undefined ? avatar : existing.avatar,
+                    judul: judul !== undefined ? judul : existing.judul
+                };
+                currentData = updateRanks(currentData);
+                await redis.set(DATA_KEY, JSON.stringify(currentData));
+                return currentData;
+            });
+            return res.status(200).json(result);
+        } catch (e) {
+            if (e.code === 'LOCKED') return res.status(409).json({ code: 'CONCURRENT_UPDATE', message: 'Server sedang digunakan, coba lagi dalam 1-2 detik.' });
+            if (e.code === 'NOT_FOUND') return res.status(404).json({ code: 'NOT_FOUND', message: 'Data tidak ditemukan.' });
+            throw e;
         }
-
-        let currentData = (await redis.get(DATA_KEY)) || [];
-        if (index >= 0 && index < currentData.length) {
-            const total = parseInt(score1 || 0) + parseInt(score2 || 0);
-            const item = currentData[index];
-            currentData[index] = { 
-                ...item,
-                nama, 
-                pembimbing1, 
-                score1: parseInt(score1 || 0), 
-                pembimbing2, 
-                score2: parseInt(score2 || 0), 
-                total,
-                avatar: avatar !== undefined ? avatar : item.avatar,
-                judul: judul !== undefined ? judul : item.judul
-            };
-            
-            currentData = updateRanks(currentData);
-            await redis.set(DATA_KEY, JSON.stringify(currentData));
-            return res.status(200).json(currentData);
-        }
-        return res.status(400).json({ error: 'Index tidak valid' });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

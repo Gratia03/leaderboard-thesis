@@ -525,7 +525,7 @@
 
 <script>
     let allData = [];
-    let currentEditIndex = -1;
+    let currentEditId = null;
     let activeTab = 'mahasiswa';
 
     // Dosen prefix mapping
@@ -639,7 +639,7 @@
             const el = document.createElement('div');
             el.className = `flex flex-col items-center justify-end w-full md:w-1/4 cursor-pointer group opacity-0 animate-fade-in-up`;
             el.style.animationDelay = pos.delay;
-            el.onclick = () => showStats(allData.indexOf(pos.item));
+            el.onclick = () => showStats(pos.item.id);
             
             el.innerHTML = `
                 <div class="${extraAnim} w-full flex flex-col items-center justify-end">
@@ -686,9 +686,9 @@
             tr.className = `transition-all duration-300 cursor-pointer opacity-0 animate-fade-in-up border-b border-white/[0.02] last:border-0 group ${rowClass}`;
             tr.style.animationDelay = `${delay}s`;
             tr.onclick = (e) => {
-                if(!e.target.closest('button')) showStats(idx);
+                if(!e.target.closest('button')) showStats(item.id);
             };
-            
+
             tr.innerHTML = `
                 <td class="px-6 py-4">
                     <div class="flex flex-col items-center gap-1.5">
@@ -725,7 +725,7 @@
                 </td>
                 <td class="px-6 py-4">
                     <div class="flex justify-center gap-2 opacity-30 group-hover:opacity-100 transition-opacity duration-300">
-                        <button onclick="event.stopPropagation(); startEdit(${idx})" class="p-2.5 text-slate-400 hover:text-white bg-dark-900 hover:bg-indigo-600 border border-white/5 hover:border-transparent rounded-xl transition-all shadow-sm" title="Update Data">
+                        <button onclick="event.stopPropagation(); startEdit('${item.id}')" class="p-2.5 text-slate-400 hover:text-white bg-dark-900 hover:bg-indigo-600 border border-white/5 hover:border-transparent rounded-xl transition-all shadow-sm" title="Update Data">
                             <i data-lucide="edit-3" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -868,7 +868,7 @@
     function closeFormModal() {
         document.getElementById('formModal').classList.remove('active');
         document.body.style.overflow = 'auto';
-        currentEditIndex = -1;
+        currentEditId = null;
         document.getElementById('modalTitle').innerHTML = '<i data-lucide="terminal" class="w-5 h-5 text-indigo-400"></i> New Deployment';
         document.getElementById('btn-save-text').innerHTML = 'Deploy Start <i data-lucide="send" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>';
         
@@ -891,9 +891,10 @@
         lucide.createIcons();
     }
 
-    function startEdit(idx) {
-        currentEditIndex = idx;
-        const item = allData[idx];
+    function startEdit(id) {
+        const item = allData.find(d => d.id === id);
+        if (!item) return;
+        currentEditId = id;
         document.getElementById('modalTitle').innerHTML = '<i data-lucide="terminal" class="w-5 h-5 text-indigo-400"></i> Update Deployment';
         document.getElementById('btn-save-text').innerHTML = 'Re-Deploy <i data-lucide="refresh-cw" class="w-4 h-4 group-hover:rotate-180 transition-transform duration-500"></i>';
         
@@ -988,13 +989,14 @@
         document.getElementById('btn-save').disabled = true;
         lucide.createIcons();
 
-        const isEditing = currentEditIndex > -1;
+        const isEditing = currentEditId !== null;
+        const editingItem = isEditing ? allData.find(d => d.id === currentEditId) : null;
         const payload = {
-            nama: isEditing ? allData[currentEditIndex].nama : document.getElementById('form-nama').value.trim(),
+            nama: isEditing ? editingItem.nama : document.getElementById('form-nama').value.trim(),
             judul: document.getElementById('form-judul').value.trim(),
-            pembimbing1: isEditing ? allData[currentEditIndex].pembimbing1 : document.getElementById('form-pembimbing1').value.trim(),
+            pembimbing1: isEditing ? editingItem.pembimbing1 : document.getElementById('form-pembimbing1').value.trim(),
             score1: document.getElementById('form-score1').value,
-            pembimbing2: isEditing ? allData[currentEditIndex].pembimbing2 : document.getElementById('form-pembimbing2').value.trim(),
+            pembimbing2: isEditing ? editingItem.pembimbing2 : document.getElementById('form-pembimbing2').value.trim(),
             score2: document.getElementById('form-score2').value,
             avatar: document.getElementById('avatarBase64').value
         };
@@ -1009,25 +1011,44 @@
 
         try {
             const method = isEditing ? 'PUT' : 'POST';
-            if (isEditing) payload.index = currentEditIndex;
+            if (isEditing) payload.id = currentEditId;
 
-            await fetch('/api', {
+            const res = await fetch('/api', {
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
-            
+
+            if (res.status === 409) {
+                const err = await res.json();
+                alert(err.message || 'Server sedang digunakan, coba lagi dalam 1-2 detik.');
+                btnText.innerHTML = originalHtml;
+                lucide.createIcons();
+                return;
+            }
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alert(err.message || 'Terjadi kesalahan, coba lagi.');
+                btnText.innerHTML = originalHtml;
+                lucide.createIcons();
+                return;
+            }
+
             closeFormModal();
             await loadData();
         } catch (e) {
-            alert('Upload sequence failed.');
+            alert('Koneksi gagal, periksa internet dan coba lagi.');
+            btnText.innerHTML = originalHtml;
+            lucide.createIcons();
         } finally {
             document.getElementById('btn-save').disabled = false;
         }
     }
 
     // Modal Stats Logic (Tetap sama, hanya class UI yang dipanggil dari HTML)
-    function showStats(idx) {
+    function showStats(id) {
+        const idx = allData.findIndex(d => d.id === id);
         const item = allData[idx];
         if (!item) return;
 
